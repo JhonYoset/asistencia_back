@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/asistencia")
+@RequestMapping("/asistencia")
 @RequiredArgsConstructor
 public class AsistenciaController {
 
@@ -35,11 +35,6 @@ public class AsistenciaController {
     public ResponseEntity<List<AsistenciaResponseDto>> historial(Authentication auth) {
         return ResponseEntity.ok(service.getHistorial(auth.getName()));
     }
-/* 
-    @PostMapping("/justificacion")
-    public ResponseEntity<String> justificar(Authentication auth, @RequestBody JustificacionRequestDto dto) {
-        return ResponseEntity.ok(service.solicitarJustificacion(auth.getName(), dto));
-    }*/
 
     @PostMapping("/justificaciones_solicitud")
     public ResponseEntity<JustificacionResponseDto> solicitarJustificacion(
@@ -56,10 +51,9 @@ public class AsistenciaController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/reportes/fechas")
-    public ResponseEntity<Object> reporteFechas(
+    public ResponseEntity<List<AsistenciaResponseDto>> reportePorFechas(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
         return ResponseEntity.ok(service.reportePorRangoFechas(desde, hasta));
-    
-}
+    }
 }

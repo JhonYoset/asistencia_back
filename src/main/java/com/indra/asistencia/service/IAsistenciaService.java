@@ -12,5 +12,5 @@ public interface IAsistenciaService {
     JustificacionResponseDto solicitarJustificacion(String username, JustificacionRequestDto dto);
     List<Justificacion> getJustificacionesPendientes();
     String aprobarJustificacion(Long id);
-    Object reportePorRangoFechas(LocalDate desde, LocalDate hasta);
+    List<AsistenciaResponseDto> reportePorRangoFechas(LocalDate desde, LocalDate hasta);
 }
