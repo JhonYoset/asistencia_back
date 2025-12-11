@@ -1,0 +1,23 @@
+### Crear usuario EMPLEADO
+POST http://localhost:8080/api/admin/usuarios
+Content-Type: application/json
+Authorization: Bearer {{jwt_token_admin}}
+
+{
+  "username": "juan.perez",
+  "password": "12345",
+  "nombre": "Juan Pérez",
+  "rol": "EMPLEADO"
+}
+
+### Crear otro ADMIN
+POST http://localhost:8080/api/admin/usuarios
+Content-Type: application/json
+Authorization: Bearer {{jwt_token_admin}}
+
+{
+  "username": "ana.lopez",
+  "password": "admin2025",
+  "nombre": "Ana López",
+  "rol": "ADMIN"
+}

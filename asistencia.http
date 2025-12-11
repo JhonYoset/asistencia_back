@@ -1,0 +1,117 @@
+### 1. LOGIN ADMIN → Guarda el JWT automáticamente
+POST http://localhost:8080/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=admin123
+
+> {%
+    client.global.set("jwt_admin", response.body.trim());
+    client.log("JWT ADMIN guardado: " + response.body.trim());
+%}
+
+### 2. LOGIN EMPLEADO → Guarda el JWT del empleado
+POST http://localhost:8080/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=juan.perez&password=12345
+
+> {%
+    client.global.set("jwt_empleado", response.body.trim());
+    client.log("JWT EMPLEADO guardado: " + response.body.trim());
+%}
+
+### =====================================================================
+### PRUEBAS CON EMPLEADO (juan.perez)
+### =====================================================================
+
+### Check-in del empleado
+POST http://localhost:8080/asistencia/checkin
+Authorization: Bearer {{jwt_empleado}}
+
+### Check-out del empleado
+POST http://localhost:8080/asistencia/checkout
+Authorization: Bearer {{jwt_empleado}}
+
+### Ver mi historial
+GET http://localhost:8080/asistencia/historial
+Authorization: Bearer {{jwt_empleado}}
+
+### Solicitar justificación por tardanza
+POST http://localhost:8080/asistencia/justificaciones_solicitud
+Content-Type: application/json
+Authorization: Bearer {{jwt_empleado}}
+
+{
+  "fecha": "2025-11-28",
+  "tipo": "TARDANZA",
+  "motivo": "Tráfico intenso en la autopista"
+}
+
+### Solicitar justificación por ausencia
+POST http://localhost:8080/asistencia/justificaciones_solicitud
+Content-Type: application/json
+Authorization: Bearer {{jwt_empleado}}
+
+{
+  "fecha": "2025-11-27",
+  "tipo": "AUSENCIA",
+  "motivo": "Cita médica"
+}
+
+### =====================================================================
+### PRUEBAS SOLO PARA ADMIN
+### =====================================================================
+
+### Ver justificaciones pendientes (solo ADMIN)
+GET http://localhost:8080/asistencia/justificaciones/pendientes
+Authorization: Bearer {{jwt_admin}}
+
+### Aprobar justificación ID=1 (solo ADMIN)
+PUT http://localhost:8080/asistencia/justificaciones_aprobacion/1
+Authorization: Bearer {{jwt_admin}}
+
+### Rechazar justificación (opcional - puedes añadir estado RECHAZADO si quieres)
+# PUT http://localhost:8080/asistencia/justificaciones_aprobacion/2?accion=rechazar
+# Authorization: Bearer {{jwt_admin}}
+
+### Reporte por rango de fechas (solo ADMIN)
+GET http://localhost:8080/asistencia/reportes/fechas?desde=2025-11-01&hasta=2025-11-30
+Authorization: Bearer {{jwt_admin}}
+
+### =====================================================================
+### PRUEBAS DE CREACIÓN DE USUARIOS (solo ADMIN)
+### =====================================================================
+
+### Crear un nuevo EMPLEADO
+POST http://localhost:8080/api/admin/usuarios
+Content-Type: application/json
+Authorization: Bearer {{jwt_admin}}
+
+{
+  "username": "maria.gomez",
+  "password": "maria2025",
+  "nombre": "María Gómez",
+  "rol": "EMPLEADO"
+}
+
+### Crear un nuevo ADMIN
+POST http://localhost:8080/api/admin/usuarios
+Content-Type: application/json
+Authorization: Bearer {{jwt_admin}}
+
+{
+  "username": "carlos.lopez",
+  "password": "carlos2025",
+  "nombre": "Carlos López",
+  "rol": "ADMIN"
+}
+
+### =====================================================================
+### SWAGGER UI
+### =====================================================================
+
+### Abrir documentación
+GET http://localhost:8080/swagger-ui.html
+
+### OpenAPI JSON
+GET http://localhost:8080/v3/api-docs
