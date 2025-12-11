@@ -3,9 +3,32 @@ package com.indra.asistencia.repository;
 import com.indra.asistencia.models.Asistencia;
 import com.indra.asistencia.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
+
     Optional<Asistencia> findFirstByUsuarioAndFechaRegistroOrderByEntradaDesc(User usuario, LocalDate fecha);
+
+    @Procedure(name = "sp_reporte_puntualidad_empleado")
+    List<Object[]> reportePuntualidadEmpleado(
+            @Param("p_username") String username,
+            @Param("p_desde") LocalDate desde,
+            @Param("p_hasta") LocalDate hasta
+    );
+
+    
+    @Procedure(name = "sp_reporte_asistencia_rango")
+    List<Object[]> reporteGeneralAsistencia(
+            @Param("p_desde") LocalDate desde,
+            @Param("p_hasta") LocalDate hasta
+    );
 }
