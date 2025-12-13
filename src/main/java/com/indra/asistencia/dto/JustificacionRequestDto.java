@@ -3,9 +3,13 @@ package com.indra.asistencia.dto;
 import lombok.*;
 import java.time.LocalDate;
 
-@Data @Builder
+@Data 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class JustificacionRequestDto {
+    
     private LocalDate fecha;
-    private String tipo; // TARDANZA o AUSENCIA
+    private String tipo;
     private String motivo;
 }

@@ -98,12 +98,36 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         User usuario = userRepo.getByUserName(username)
                 .orElseThrow(() -> new ValidatedRequestException("Usuario no encontrado"));
 
+        // Validar datos
+        if (dto.getFecha() == null) {
+            throw new ValidatedRequestException("La fecha es obligatoria");
+        }
+        
+        if (dto.getMotivo() == null || dto.getMotivo().trim().isEmpty()) {
+            throw new ValidatedRequestException("El motivo es obligatorio");
+        }
+        
+        if (dto.getMotivo().length() < 10) {
+            throw new ValidatedRequestException("El motivo debe tener al menos 10 caracteres");
+        }
+
+        // Establecer tipo por defecto si no viene
+        String tipo = (dto.getTipo() != null && !dto.getTipo().trim().isEmpty()) 
+                    ? dto.getTipo().toUpperCase() 
+                    : "TARDANZA";
+        
+        // Validar que el tipo sea válido
+        if (!tipo.equals("TARDANZA") && !tipo.equals("AUSENCIA")) {
+            throw new ValidatedRequestException("Tipo inválido. Use TARDANZA o AUSENCIA");
+        }
+
         Justificacion justificacion = Justificacion.builder()
                 .usuario(usuario)
                 .fecha(dto.getFecha())
-                .tipo(dto.getTipo() != null ? dto.getTipo().toUpperCase() : "TARDANZA")
-                .motivo(dto.getMotivo())
+                .tipo(tipo)
+                .motivo(dto.getMotivo().trim())
                 .estado("PENDIENTE")
+                .fechaSolicitud(LocalDateTime.now())
                 .build();
 
         justificacionRepo.save(justificacion);
@@ -119,7 +143,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                         .format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")))
                 .build();
     }
-
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public List<Justificacion> getJustificacionesPendientes() {
