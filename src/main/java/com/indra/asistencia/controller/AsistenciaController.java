@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/asistencia")
+@RequestMapping("/api/asistencia")  // ✅ AGREGADO /api/
 @RequiredArgsConstructor
 public class AsistenciaController {
 
