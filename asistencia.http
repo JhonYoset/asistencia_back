@@ -26,7 +26,7 @@ username=juan.perez&password=12345
 
 ### Check-in del empleado
 POST http://localhost:8080/asistencia/checkin
-Authorization: Bearer {{jwt_empleado}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzY1NjAzNTQ3LCJleHAiOjE3NjU2MDcxNDd9.1BWiVuA7eugZbmAkngsDufNrQ73Y6hmvy1COeGT9QFg
 
 ### Check-out del empleado
 POST http://localhost:8080/asistencia/checkout
