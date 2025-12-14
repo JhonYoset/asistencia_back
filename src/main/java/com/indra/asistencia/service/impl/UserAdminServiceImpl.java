@@ -5,8 +5,14 @@ import com.indra.asistencia.dto.UserResponseDto;
 import com.indra.asistencia.exception.ResourceNotFoundException;
 import com.indra.asistencia.exception.ValidatedRequestException;
 import com.indra.asistencia.mappers.UserMapper;
-import com.indra.asistencia.models.*;
-import com.indra.asistencia.repository.*;
+import com.indra.asistencia.models.Asistencia;
+import com.indra.asistencia.models.Role;
+import com.indra.asistencia.models.User;
+import com.indra.asistencia.models.UserRols;
+import com.indra.asistencia.repository.AsistenciaRepository;
+import com.indra.asistencia.repository.IRoleRepository;
+import com.indra.asistencia.repository.IUserRepository;
+import com.indra.asistencia.repository.IUserRoleRepository;
 import com.indra.asistencia.service.IUserAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +47,9 @@ public class UserAdminServiceImpl implements IUserAdminService {
         User nuevo = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
+                .nombreCompleto(dto.getNombreCompleto())
                 .enabled(true)
+                .fechaCreacion(java.time.LocalDateTime.now())
                 .build();
         userRepo.save(nuevo);
 
@@ -56,7 +64,7 @@ public class UserAdminServiceImpl implements IUserAdminService {
                 .build();
         userRoleRepo.save(userRol);
 
-        return "Usuario " + dto.getUsername() + " creado con rol " + dto.getRol();
+        return "Usuario " + dto.getUsername() + " (" + dto.getNombreCompleto() + ") creado con rol " + dto.getRol();
     }
 
     @Override
@@ -113,6 +121,9 @@ public class UserAdminServiceImpl implements IUserAdminService {
             }
             usuario.setUsername(dto.getUsername());
         }
+        
+        // Actualizar nombre completo
+        usuario.setNombreCompleto(dto.getNombreCompleto());
         
         // Actualizar contraseña si se proporcionó
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {

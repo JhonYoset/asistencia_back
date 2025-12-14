@@ -1,9 +1,9 @@
 package com.indra.asistencia.mappers;
 
 import com.indra.asistencia.dto.UserResponseDto;
+import com.indra.asistencia.models.Asistencia;
 import com.indra.asistencia.models.User;
 import com.indra.asistencia.models.UserRols;
-import com.indra.asistencia.models.Asistencia;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +20,11 @@ public class UserMapper {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .nombre(user.getUsername()) // Por defecto, usar username como nombre
+                .nombreCompleto(user.getNombreCompleto() != null ? user.getNombreCompleto() : user.getUsername())
                 .rol(rol != null ? rol : "EMPLEADO")
                 .enabled(user.isEnabled())
-                .fechaCreacion(java.time.LocalDateTime.now()) // Aquí podrías agregar un campo en la entidad
-                .ultimoAcceso(null) // Podrías agregar este campo en la entidad
+                .fechaCreacion(user.getFechaCreacion() != null ? user.getFechaCreacion() : java.time.LocalDateTime.now())
+                .ultimoAcceso(user.getUltimoAcceso())
                 .totalAsistencias(totalAsistencias)
                 .build();
     }
@@ -41,11 +41,11 @@ public class UserMapper {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .nombre(user.getUsername()) // Por defecto
+                .nombreCompleto(user.getNombreCompleto() != null ? user.getNombreCompleto() : user.getUsername())
                 .rol(rol)
                 .enabled(user.isEnabled())
-                .fechaCreacion(java.time.LocalDateTime.now())
-                .ultimoAcceso(null)
+                .fechaCreacion(user.getFechaCreacion() != null ? user.getFechaCreacion() : java.time.LocalDateTime.now())
+                .ultimoAcceso(user.getUltimoAcceso())
                 .totalAsistencias(totalAsistencias)
                 .build();
     }

@@ -5,24 +5,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponseDto {
-    @NotNull // ← Asegura que no sea null
+    @NotNull
     private Long id;
     
     @NotBlank
     private String username;
     
     @NotBlank
-    private String nombre;
+    private String nombreCompleto;
     
     @NotBlank
     private String rol;
