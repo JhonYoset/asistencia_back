@@ -1,14 +1,9 @@
 package com.indra.asistencia.controller;
 
-
 import org.springframework.security.core.Authentication;
-
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,10 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.indra.asistencia.Jwt.JwtUtil;
 import com.indra.asistencia.exception.ValidatedRequestException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
  
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -29,35 +30,42 @@ public class AuthController {
 
     public AuthController(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-
     }
 
     @PostMapping("/login")
     public String login(@RequestParam String username, @RequestParam String password) {
-        // Aquí deberías validar el usuario y contraseña contra tu base de datos o sistema
-        // if ("user".equals(username) && "admin".equals(password)) {
-        //     return jwtUtil.generateToken(username);
-        // }
-
+        logger.info("=== INICIO LOGIN ===");
+        logger.info("Username recibido: {}", username);
+        
         try {
+            // Autenticar usuario
             Authentication auth = this.authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
             );
+            
+            logger.info("✅ Usuario autenticado: {}", username);
 
+            // Obtener roles
             List<String> roles = auth.getAuthorities().stream()
                 .map(r -> r.getAuthority())
                 .toList();
+            
+            logger.info("Roles del usuario: {}", roles);
 
-            return jwtUtil.generateToken(username, roles);
+            // Generar token
+            String token = jwtUtil.generateToken(username, roles);
+            
+            logger.info("✅ Token generado (primeros 30 caracteres): {}", 
+                       token.substring(0, Math.min(30, token.length())));
+            logger.info("=== FIN LOGIN EXITOSO ===");
+            
+            // ✅ IMPORTANTE: Devolver SOLO el token como texto plano
+            return token;
             
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.error("❌ Error en login para usuario: {}", username);
+            logger.error("Detalle del error:", e);
             throw new ValidatedRequestException("Credenciales inválidas");
         }
-
-
-
     }
-
-
 }
