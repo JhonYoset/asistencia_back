@@ -22,4 +22,24 @@ public class Asistencia {
 
     @Column(name = "fecha_registro")
     private LocalDate fechaRegistro = LocalDate.now();
+    
+    // AGREGAR ESTE CAMPO
+    private String estado;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (fechaRegistro == null) {
+            fechaRegistro = LocalDate.now();
+        }
+        if (estado == null) {
+            estado = salida == null ? "EN_OFICINA" : "COMPLETADO";
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        if (salida != null && "EN_OFICINA".equals(estado)) {
+            estado = "COMPLETADO";
+        }
+    }
 }

@@ -11,30 +11,35 @@ import java.util.stream.Collectors;
 @Component
 public class AsistenciaMapper {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter FULL_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 
-    /**
-     * Convierte una entidad Asistencia a DTO de respuesta
-     */
-    public AsistenciaResponseDto toDto(Asistencia asistencia) {
+    public AsistenciaResponseDto toResponseDto(Asistencia asistencia) {
         if (asistencia == null) return null;
+        
+        AsistenciaResponseDto dto = new AsistenciaResponseDto();
+        dto.setId(asistencia.getId());
+        
+        if (asistencia.getUsuario() != null) {
+            dto.setNombreEmpleado(asistencia.getUsuario().getUsername());
+            dto.setUsuarioId(asistencia.getUsuario().getId());
+        }
+        
+        dto.setEntrada(asistencia.getEntrada());
+        dto.setSalida(asistencia.getSalida());
+        dto.setEstado(asistencia.getEstado());
+        
+        // Formatear fechaRegistro si es LocalDate
+        if (asistencia.getFechaRegistro() != null) {
+            dto.setFechaRegistro(asistencia.getFechaRegistro().format(
+                DateTimeFormatter.ofPattern("dd-MM-yyyy")
+            ));
+        }
+        
+        return dto;
+    }
 
-        String estado = (asistencia.getSalida() == null) ? "EN_OFICINA" : "COMPLETADO";
-
-        return AsistenciaResponseDto.builder()
-                .id(asistencia.getId())
-                .nombreEmpleado(asistencia.getUsuario() != null ? asistencia.getUsuario().getUsername() : "Desconocido")
-                .entrada(asistencia.getEntrada())
-                .salida(asistencia.getSalida())
-                .estado(estado)
-                .fechaRegistro(
-                    asistencia.getFechaRegistro() != null 
-                        ? asistencia.getFechaRegistro().format(DATE_FORMATTER) 
-                        : null
-                )
-                .build();
+    public AsistenciaResponseDto toDto(Asistencia asistencia) {
+        return toResponseDto(asistencia);
     }
 
     /**
@@ -62,13 +67,23 @@ public class AsistenciaMapper {
             ? asistencia.getSalida().format(FULL_FORMATTER) 
             : null;
 
-        return AsistenciaResponseDto.builder()
-                .id(asistencia.getId())
-                .nombreEmpleado(asistencia.getUsuario().getUsername())
-                .entrada(asistencia.getEntrada())
-                .salida(asistencia.getSalida())
-                .estado(asistencia.getSalida() == null ? "EN_OFICINA" : "COMPLETADO")
-                .fechaRegistro(entradaStr + " → " + (salidaStr != null ? salidaStr : "Sin salida"))
-                .build();
+        // CREAR DTO SIN USAR BUILDER
+        AsistenciaResponseDto dto = new AsistenciaResponseDto();
+        dto.setId(asistencia.getId());
+        dto.setNombreEmpleado(asistencia.getUsuario().getUsername());
+        dto.setEntrada(asistencia.getEntrada());
+        dto.setSalida(asistencia.getSalida());
+        
+        // Determinar estado
+        String estado = asistencia.getEstado();
+        if (estado == null) {
+            estado = asistencia.getSalida() == null ? "EN_OFICINA" : "COMPLETADO";
+        }
+        dto.setEstado(estado);
+        
+        // Campo especial para mostrar formato
+        dto.setFechaRegistro(entradaStr + " → " + (salidaStr != null ? salidaStr : "Sin salida"));
+        
+        return dto;
     }
 }

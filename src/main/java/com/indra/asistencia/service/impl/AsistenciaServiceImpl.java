@@ -8,6 +8,7 @@ import com.indra.asistencia.models.*;
 import com.indra.asistencia.repository.*;
 import com.indra.asistencia.service.IAsistenciaService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +26,9 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
     private final IUserRepository userRepo;
     private final AsistenciaRepository asistenciaRepo;
     private final JustificacionRepository justificacionRepo;
-    private final AsistenciaMapper asistenciaMapper;
+    private final AsistenciaMapper asistenciaMapper; // Inyecta en constructor
 
-    private static final LocalTime HORA_LIMITE_TARDANZA = LocalTime.of(9, 10); // 09:10 AM
+    private static final LocalTime HORA_LIMITE_TARDANZA = LocalTime.of(9, 10);
 
     @Override
     public String registrarAsistencia(String username, String accion) {
@@ -50,11 +51,12 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             Asistencia nueva = Asistencia.builder()
                     .usuario(usuario)
                     .entrada(ahora)
+                    .fechaRegistro(hoy)
+                    .estado("EN_OFICINA") // INICIALIZAR ESTADO
                     .build();
 
             asistenciaRepo.save(nueva);
 
-            // TOLERANCIA DE 10 MINUTOS → si llega después de las 09:10, se crea justificación automática
             if (ahora.toLocalTime().isAfter(HORA_LIMITE_TARDANZA)) {
                 Justificacion tardanza = Justificacion.builder()
                         .usuario(usuario)
@@ -75,6 +77,7 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             }
 
             ultima.setSalida(ahora);
+            ultima.setEstado("COMPLETADO"); // ACTUALIZAR ESTADO
             asistenciaRepo.save(ultima);
             return "Check-out registrado correctamente";
         }
@@ -98,7 +101,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         User usuario = userRepo.getByUserName(username)
                 .orElseThrow(() -> new ValidatedRequestException("Usuario no encontrado"));
 
-        // Validar datos
         if (dto.getFecha() == null) {
             throw new ValidatedRequestException("La fecha es obligatoria");
         }
@@ -111,12 +113,10 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             throw new ValidatedRequestException("El motivo debe tener al menos 10 caracteres");
         }
 
-        // Establecer tipo por defecto si no viene
         String tipo = (dto.getTipo() != null && !dto.getTipo().trim().isEmpty()) 
                     ? dto.getTipo().toUpperCase() 
                     : "TARDANZA";
         
-        // Validar que el tipo sea válido
         if (!tipo.equals("TARDANZA") && !tipo.equals("AUSENCIA")) {
             throw new ValidatedRequestException("Tipo inválido. Use TARDANZA o AUSENCIA");
         }
@@ -143,6 +143,7 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                         .format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")))
                 .build();
     }
+
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public List<Justificacion> getJustificacionesPendientes() {
@@ -163,20 +164,19 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         justificacionRepo.save(j);
         return "Justificación aprobada correctamente";
     }
-
+    
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public List<AsistenciaResponseDto> reportePorRangoFechas(LocalDate desde, LocalDate hasta) {
-        if (desde.isAfter(hasta)) {
-            throw new ValidatedRequestException("La fecha 'desde' no puede ser posterior a 'hasta'");
-        }
-
         return asistenciaRepo.findAll().stream()
-                .filter(a -> {
-                    LocalDate fecha = a.getFechaRegistro();
-                    return !fecha.isBefore(desde) && !fecha.isAfter(hasta);
-                })
-                .map(asistenciaMapper::toDto)
-                .collect(Collectors.toList());
+            .filter(asistencia -> {
+                if (asistencia.getFechaRegistro() == null) {
+                    return false;
+                }
+                return !asistencia.getFechaRegistro().isBefore(desde) && 
+                       !asistencia.getFechaRegistro().isAfter(hasta);
+            })
+            .map(asistenciaMapper::toDto) // Usar toDto en lugar de toResponseDto
+            .collect(Collectors.toList());
     }
 }
