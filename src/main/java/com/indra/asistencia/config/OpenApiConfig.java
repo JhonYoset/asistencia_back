@@ -12,9 +12,9 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 @Configuration
 @OpenAPIDefinition(
     info = @Info(
-        title = "Mafre Test API",
+        title = "Asistencia Indra",
         version = "v1",
-        description = "API Test Equipo Mafre"
+        description = "API Asistencia Indra"
     ),
     security =  @SecurityRequirement(name = "bearerAuth")
 )

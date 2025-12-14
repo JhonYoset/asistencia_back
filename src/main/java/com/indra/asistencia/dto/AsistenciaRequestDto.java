@@ -4,5 +4,5 @@ import lombok.*;
 
 @Data @Builder
 public class AsistenciaRequestDto {
-    private String accion; // "CHECKIN" o "CHECKOUT"
+    private String accion; 
 }

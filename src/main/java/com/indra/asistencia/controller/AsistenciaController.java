@@ -47,10 +47,7 @@ public class AsistenciaController {
     public ResponseEntity<List<AsistenciaResponseDto>> historial(Authentication auth) {
         return ResponseEntity.ok(service.getHistorial(auth.getName()));
     }
-
-    /**
-     * ✅ ENDPOINT SIMPLE PARA VERIFICAR ESTADO (Sin DTO adicional)
-     */
+    
     @GetMapping("/estado")
     public ResponseEntity<Map<String, Object>> getEstadoActual(Authentication auth) {
         Map<String, Object> estado = new HashMap<>();

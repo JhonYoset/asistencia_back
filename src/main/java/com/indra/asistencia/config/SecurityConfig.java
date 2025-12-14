@@ -30,14 +30,14 @@ public class SecurityConfig {
         http
         .csrf( csrf -> csrf.disable() )
             .authorizeHttpRequests( auth -> auth 
-                .requestMatchers("/api/**").authenticated() // ✅ Esto protege /api/admin/**
+                .requestMatchers("/api/**").authenticated() 
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
                     "/webjars/**",
                     "/actuator/**",
                     "/swagger-ui/**",
-                    "/auth/**").permitAll() // ✅ /auth sin /api/
+                    "/auth/**").permitAll()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

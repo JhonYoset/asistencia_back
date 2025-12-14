@@ -18,8 +18,8 @@ public class Justificacion {
     private User usuario;
 
     private LocalDate fecha;
-    private String tipo; // "TARDANZA" o "AUSENCIA"
+    private String tipo; 
     private String motivo;
-    private String estado = "PENDIENTE"; // PENDIENTE, APROBADO, RECHAZADO
+    private String estado = "PENDIENTE";
     private LocalDateTime fechaSolicitud = LocalDateTime.now();
 }

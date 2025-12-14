@@ -14,15 +14,12 @@ import java.util.Optional;
 @Repository
 public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
 
-    // ✅ QUERY SIMPLIFICADA - Solo buscar por usuario y fecha
     @Query("SELECT a FROM Asistencia a WHERE a.usuario.id = :usuarioId AND a.fechaRegistro = :fecha ORDER BY a.entrada DESC")
     List<Asistencia> findByUsuarioIdAndFecha(@Param("usuarioId") Long usuarioId, @Param("fecha") LocalDate fecha);
 
-    // ✅ Query para obtener la última asistencia de un usuario en una fecha
     @Query("SELECT a FROM Asistencia a WHERE a.usuario.id = :usuarioId AND a.fechaRegistro = :fecha ORDER BY a.id DESC")
     List<Asistencia> findByUsuarioIdAndFechaOrderByIdDesc(@Param("usuarioId") Long usuarioId, @Param("fecha") LocalDate fecha);
 
-    // Query original (mantener por compatibilidad)
     Optional<Asistencia> findFirstByUsuarioAndFechaRegistroOrderByEntradaDesc(User usuario, LocalDate fecha);
 
     @Query(value = "SELECT * FROM ASISTENCIA WHERE user_id = :usuarioId AND fecha_registro = :fecha ORDER BY entrada DESC", nativeQuery = true)

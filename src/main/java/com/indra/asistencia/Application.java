@@ -19,7 +19,6 @@ public class Application implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		
-		//genere contraseña con Bean PasswordEncoder
 		String password = "12345";
 		for (int i = 0; i < 3 ; i++) {
 			String passwordEncoded = passwordEncoder.encode(password);

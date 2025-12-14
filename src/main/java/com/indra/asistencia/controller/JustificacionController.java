@@ -23,9 +23,6 @@ public class JustificacionController {
     
     private final IJustificacionService justificacionService;
 
-    /**
-     * Solicitar una nueva justificación (empleado)
-     */
     @PostMapping
     public ResponseEntity<JustificacionResponseDto> solicitarJustificacion(
             Authentication auth,
@@ -37,9 +34,6 @@ public class JustificacionController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Aprobar justificación (admin) - ✅ ESTE ES EL ENDPOINT QUE FALTABA
-     */
     @PostMapping("/{id}/aprobar")
     public ResponseEntity<String> aprobarJustificacion(@PathVariable Long id) {
         logger.info("POST /api/asistencia/justificacion/{}/aprobar", id);
@@ -48,9 +42,6 @@ public class JustificacionController {
         return ResponseEntity.ok(mensaje);
     }
 
-    /**
-     * Obtener mis justificaciones (empleado)
-     */
     @GetMapping("/mis-justificaciones")
     public ResponseEntity<List<Justificacion>> getMisJustificaciones(Authentication auth) {
         logger.info("GET /api/asistencia/justificacion/mis-justificaciones - Usuario: {}", auth.getName());

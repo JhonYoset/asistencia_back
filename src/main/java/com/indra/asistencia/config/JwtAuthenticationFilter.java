@@ -77,16 +77,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             ExceptionDto dto = ExceptionDto.builder()
                 .hora(LocalDateTime.now().toString())
                 .codeStatus(401)
-                //.mensaje(ex.getMessage())
                 .mensaje("Token invalido o expirado")
                 .url(request.getRequestURI())
                 .build();
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            // response.getWriter().write("{\"timestamp\":\"" + java.time.LocalDateTime.now() +
-            //         "\",\"status\":401,\"error\":\"JWT Error\",\"message\":\"" + ex.getMessage() +
-            //         "\",\"path\":\"" + request.getRequestURI() + "\"}");
             response.getWriter().write(new ObjectMapper().writeValueAsString(dto));
         }
     }

@@ -38,12 +38,10 @@ public class UserAdminServiceImpl implements IUserAdminService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public String crearUsuario(CreateUserRequestDto dto) {
-        // Validar que el username no exista
         if (userRepo.getByUserName(dto.getUsername()).isPresent()) {
             throw new ValidatedRequestException("El usuario ya existe");
         }
 
-        // Crear usuario
         User nuevo = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -53,11 +51,9 @@ public class UserAdminServiceImpl implements IUserAdminService {
                 .build();
         userRepo.save(nuevo);
 
-        // Buscar el rol
         Role rol = roleRepo.findByName(dto.getRol().toUpperCase())
                 .orElseThrow(() -> new ValidatedRequestException("Rol no válido: " + dto.getRol()));
 
-        // Asignar rol
         UserRols userRol = UserRols.builder()
                 .user(nuevo)
                 .role(rol)
@@ -74,13 +70,11 @@ public class UserAdminServiceImpl implements IUserAdminService {
         
         return usuarios.stream()
                 .map(usuario -> {
-                    // Obtener roles del usuario
                     List<UserRols> roles = userRoleRepo.getRolesByUser(usuario.getId());
                     String rol = roles != null && !roles.isEmpty() 
                         ? roles.get(0).getRole().getName() 
                         : "EMPLEADO";
                     
-                    // Obtener asistencias del usuario
                     List<Asistencia> asistencias = asistenciaRepo.findAll().stream()
                             .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
                             .collect(Collectors.toList());
@@ -114,7 +108,6 @@ public class UserAdminServiceImpl implements IUserAdminService {
         User usuario = userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         
-        // Verificar si el nuevo username ya existe (si cambió)
         if (!usuario.getUsername().equals(dto.getUsername())) {
             if (userRepo.getByUserName(dto.getUsername()).isPresent()) {
                 throw new ValidatedRequestException("El nombre de usuario ya está en uso");
@@ -122,19 +115,16 @@ public class UserAdminServiceImpl implements IUserAdminService {
             usuario.setUsername(dto.getUsername());
         }
         
-        // Actualizar nombre completo
         usuario.setNombreCompleto(dto.getNombreCompleto());
         
-        // Actualizar contraseña si se proporcionó
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
             usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         
-        usuario.setEnabled(true); // Siempre activo al actualizar
+        usuario.setEnabled(true); 
         
         userRepo.save(usuario);
         
-        // Actualizar rol si es necesario
         List<UserRols> roles = userRoleRepo.getRolesByUser(usuario.getId());
         if (!roles.isEmpty()) {
             Role nuevoRol = roleRepo.findByName(dto.getRol().toUpperCase())

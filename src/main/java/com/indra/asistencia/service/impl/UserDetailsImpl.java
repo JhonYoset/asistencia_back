@@ -32,7 +32,6 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
-        //List<UserRols> userRols = userRoleRepository.getRolesByUser(user.getId());
 
         if(userRols.size() == 0){
             return List.of();

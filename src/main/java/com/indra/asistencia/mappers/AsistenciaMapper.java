@@ -28,7 +28,6 @@ public class AsistenciaMapper {
         dto.setSalida(asistencia.getSalida());
         dto.setEstado(asistencia.getEstado());
         
-        // Formatear fechaRegistro si es LocalDate
         if (asistencia.getFechaRegistro() != null) {
             dto.setFechaRegistro(asistencia.getFechaRegistro().format(
                 DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -42,9 +41,6 @@ public class AsistenciaMapper {
         return toResponseDto(asistencia);
     }
 
-    /**
-     * Convierte lista de entidades a lista de DTOs
-     */
     public List<AsistenciaResponseDto> toDtoList(List<Asistencia> asistencias) {
         if (asistencias == null || asistencias.isEmpty()) {
             return List.of();
@@ -54,9 +50,6 @@ public class AsistenciaMapper {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Versión con formato completo de fecha y hora (opcional para reportes)
-     */
     public AsistenciaResponseDto toDtoWithFullTime(Asistencia asistencia) {
         if (asistencia == null) return null;
 
@@ -67,21 +60,18 @@ public class AsistenciaMapper {
             ? asistencia.getSalida().format(FULL_FORMATTER) 
             : null;
 
-        // CREAR DTO SIN USAR BUILDER
         AsistenciaResponseDto dto = new AsistenciaResponseDto();
         dto.setId(asistencia.getId());
         dto.setNombreEmpleado(asistencia.getUsuario().getUsername());
         dto.setEntrada(asistencia.getEntrada());
         dto.setSalida(asistencia.getSalida());
         
-        // Determinar estado
         String estado = asistencia.getEstado();
         if (estado == null) {
             estado = asistencia.getSalida() == null ? "EN_OFICINA" : "COMPLETADO";
         }
         dto.setEstado(estado);
         
-        // Campo especial para mostrar formato
         dto.setFechaRegistro(entradaStr + " → " + (salidaStr != null ? salidaStr : "Sin salida"));
         
         return dto;

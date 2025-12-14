@@ -34,11 +34,9 @@ public class Asistencia {
     
     @PrePersist
     protected void onCreate() {
-        // ✅ ASEGURAR QUE SIEMPRE TENGA FECHA
         if (fechaRegistro == null) {
             fechaRegistro = LocalDate.now();
         }
-        // ✅ ASEGURAR QUE SIEMPRE TENGA ESTADO
         if (estado == null) {
             estado = salida == null ? "EN_OFICINA" : "COMPLETADO";
         }
@@ -46,11 +44,9 @@ public class Asistencia {
     
     @PreUpdate
     protected void onUpdate() {
-        // ✅ ASEGURAR QUE TENGA FECHA AL ACTUALIZAR
         if (fechaRegistro == null) {
             fechaRegistro = LocalDate.now();
         }
-        // ✅ ACTUALIZAR ESTADO SEGÚN SALIDA
         if (salida != null && "EN_OFICINA".equals(estado)) {
             estado = "COMPLETADO";
         }

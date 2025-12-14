@@ -38,28 +38,24 @@ public class AuthController {
         logger.info("Username recibido: {}", username);
         
         try {
-            // Autenticar usuario
             Authentication auth = this.authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
             );
             
             logger.info("✅ Usuario autenticado: {}", username);
 
-            // Obtener roles
             List<String> roles = auth.getAuthorities().stream()
                 .map(r -> r.getAuthority())
                 .toList();
             
             logger.info("Roles del usuario: {}", roles);
 
-            // Generar token
             String token = jwtUtil.generateToken(username, roles);
             
             logger.info("✅ Token generado (primeros 30 caracteres): {}", 
                        token.substring(0, Math.min(30, token.length())));
             logger.info("=== FIN LOGIN EXITOSO ===");
             
-            // ✅ IMPORTANTE: Devolver SOLO el token como texto plano
             return token;
             
         } catch (Exception e) {

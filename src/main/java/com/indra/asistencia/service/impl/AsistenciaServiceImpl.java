@@ -59,11 +59,9 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         logger.info("Fecha de hoy: {}", hoy);
         logger.info("Hora actual: {}", ahora);
         
-        // ✅ BUSCAR ASISTENCIAS DE HOY - MÉTODO MEJORADO
         List<Asistencia> todasAsistencias = asistenciaRepo.findAll();
         logger.info("Total de asistencias en BD: {}", todasAsistencias.size());
         
-        // Filtrar manualmente por usuario y fecha
         List<Asistencia> asistenciasHoy = todasAsistencias.stream()
                 .filter(a -> {
                     boolean esDelUsuario = a.getUsuario().getId().equals(usuario.getId());
@@ -77,7 +75,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                     return esDelUsuario && esFechaHoy;
                 })
                 .sorted((a1, a2) -> {
-                    // Ordenar por entrada (más reciente primero)
                     if (a1.getEntrada() == null) return 1;
                     if (a2.getEntrada() == null) return -1;
                     return a2.getEntrada().compareTo(a1.getEntrada());
@@ -86,7 +83,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         
         logger.info("Asistencias de hoy encontradas: {}", asistenciasHoy.size());
         
-        // Tomar la más reciente
         Asistencia ultima = asistenciasHoy.isEmpty() ? null : asistenciasHoy.get(0);
         
         if (ultima != null) {
@@ -116,7 +112,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             
             logger.info("✅ CHECK-IN guardado - ID: {}", guardada.getId());
             
-            // Verificar que se guardó correctamente
             Asistencia verificacion = asistenciaRepo.findById(guardada.getId()).orElse(null);
             if (verificacion != null) {
                 logger.info("✅ VERIFICACIÓN: Registro encontrado en BD");
@@ -125,8 +120,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             } else {
                 logger.error("❌ VERIFICACIÓN: NO se encontró el registro en BD");
             }
-
-            // Verificar tardanza
             if (ahora.toLocalTime().isAfter(HORA_LIMITE_TARDANZA)) {
                 logger.info("⏰ Tardanza detectada");
                 Justificacion tardanza = Justificacion.builder()
@@ -154,7 +147,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                                .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
                                .count());
                 
-                // Mostrar TODAS las asistencias del usuario para debugging
                 todasAsistencias.stream()
                     .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
                     .forEach(a -> {
@@ -175,7 +167,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             logger.info("   Entrada: {}", ultima.getEntrada());
             logger.info("   Salida actual: {}", ultima.getSalida());
             
-            // Actualizar la salida
             ultima.setSalida(ahora);
             ultima.setEstado("COMPLETADO");
             
@@ -187,7 +178,6 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
             logger.info("   Salida: {}", actualizada.getSalida());
             logger.info("   Estado: {}", actualizada.getEstado());
             
-            // Verificar que se actualizó correctamente
             Asistencia verificacion = asistenciaRepo.findById(actualizada.getId()).orElse(null);
             if (verificacion != null) {
                 logger.info("✅ VERIFICACIÓN: Salida registrada en BD: {}", verificacion.getSalida());

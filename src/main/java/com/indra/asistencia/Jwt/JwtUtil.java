@@ -15,40 +15,33 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 public class JwtUtil {
 
 
-    private final String SECRET = "mysecretkey001"; // Clave secreta para firmar el token
+    private final String SECRET = "mysecretkey001";
 
     public String generateToken(String username) {
-        // Aquí iría la lógica para generar un token JWT usando la biblioteca que prefieras
-        // Por simplicidad, retornamos un token simulado
 
         return JWT.create()
             .withSubject(username)
             .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 60 * 1000)) // 1 hora de validez
+            .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 60 * 1000)) 
             .sign(Algorithm.HMAC256(SECRET));
     }
 
     public String generateToken(String username, List<String> roles) {
-        // Aquí iría la lógica para generar un token JWT usando la biblioteca que prefieras
-        // Por simplicidad, retornamos un token simulado
-
+        
         return JWT.create()
             .withSubject(username)
             .withClaim("roles",roles)
             .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 60 * 1000)) // 1 hora de validez
+            .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 60 * 1000)) 
             .sign(Algorithm.HMAC256(SECRET));
     }
 
     public boolean validateToken(String token, String username) {
-        // Aquí iría la lógica para validar el token JWT
 
         DecodedJWT jwt = getDecodedJWT(token);
         return  jwt.getSubject().equals(username) && jwt.getExpiresAt().after(new Date());
 
     }
-
-    // Obtener usuario del token
     public String getUsername(String token) {
         return getDecodedJWT(token).getSubject();
     }    
