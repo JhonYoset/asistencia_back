@@ -1,11 +1,17 @@
 package com.indra.asistencia.service.impl;
 
-import com.indra.asistencia.dto.*;
+import com.indra.asistencia.dto.AsistenciaResponseDto;
+import com.indra.asistencia.dto.JustificacionRequestDto;
+import com.indra.asistencia.dto.JustificacionResponseDto;
 import com.indra.asistencia.exception.ResourceNotFoundException;
 import com.indra.asistencia.exception.ValidatedRequestException;
 import com.indra.asistencia.mappers.AsistenciaMapper;
-import com.indra.asistencia.models.*;
-import com.indra.asistencia.repository.*;
+import com.indra.asistencia.models.Asistencia;
+import com.indra.asistencia.models.Justificacion;
+import com.indra.asistencia.models.User;
+import com.indra.asistencia.repository.AsistenciaRepository;
+import com.indra.asistencia.repository.IUserRepository;
+import com.indra.asistencia.repository.JustificacionRepository;
 import com.indra.asistencia.service.IAsistenciaService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,7 +20,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,63 +54,47 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         logger.info("Usuario encontrado - ID: {}, Username: {}", usuario.getId(), usuario.getUsername());
 
         LocalDate hoy = LocalDate.now();
-        logger.info("Fecha de hoy: {}", hoy);
-        
-        // ✅ INTENTAR MÚLTIPLES QUERIES
-        List<Asistencia> asistenciasHoy = null;
-        
-        // Intento 1: Query con objeto User
-        try {
-            asistenciasHoy = asistenciaRepo.findByUsuarioAndFechaRegistro(usuario, hoy);
-            logger.info("Intento 1 (JPQL con User) - Encontradas: {}", asistenciasHoy.size());
-        } catch (Exception e) {
-            logger.error("Error en Intento 1: {}", e.getMessage());
-        }
-        
-        // Intento 2: Query con ID del usuario
-        if (asistenciasHoy == null || asistenciasHoy.isEmpty()) {
-            try {
-                asistenciasHoy = asistenciaRepo.findAllByUsuarioIdAndFecha(usuario.getId(), hoy);
-                logger.info("Intento 2 (JPQL con ID) - Encontradas: {}", asistenciasHoy.size());
-            } catch (Exception e) {
-                logger.error("Error en Intento 2: {}", e.getMessage());
-            }
-        }
-        
-        // Intento 3: Native Query
-        if (asistenciasHoy == null || asistenciasHoy.isEmpty()) {
-            try {
-                asistenciasHoy = asistenciaRepo.findByUsuarioIdAndFechaNative(usuario.getId(), hoy);
-                logger.info("Intento 3 (Native SQL) - Encontradas: {}", asistenciasHoy.size());
-            } catch (Exception e) {
-                logger.error("Error en Intento 3: {}", e.getMessage());
-            }
-        }
-        
-        // Intento 4: Buscar manualmente en TODAS las asistencias
-        if (asistenciasHoy == null || asistenciasHoy.isEmpty()) {
-            logger.warn("⚠️ Usando búsqueda manual en memoria...");
-            asistenciasHoy = asistenciaRepo.findAll().stream()
-                    .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
-                    .filter(a -> a.getFechaRegistro() != null && a.getFechaRegistro().equals(hoy))
-                    .sorted((a1, a2) -> a2.getEntrada().compareTo(a1.getEntrada()))
-                    .collect(Collectors.toList());
-            logger.info("Intento 4 (Manual) - Encontradas: {}", asistenciasHoy.size());
-        }
-        
-        if (asistenciasHoy != null && !asistenciasHoy.isEmpty()) {
-            logger.info("✅ Total asistencias de hoy: {}", asistenciasHoy.size());
-            asistenciasHoy.forEach(a -> {
-                logger.info("  → ID: {}, Entrada: {}, Salida: {}, Estado: {}", 
-                           a.getId(), a.getEntrada(), a.getSalida(), a.getEstado());
-            });
-        }
-        
-        // Tomar la primera (más reciente)
-        Asistencia ultima = (asistenciasHoy != null && !asistenciasHoy.isEmpty()) ? asistenciasHoy.get(0) : null;
-
         LocalDateTime ahora = LocalDateTime.now();
+        
+        logger.info("Fecha de hoy: {}", hoy);
         logger.info("Hora actual: {}", ahora);
+        
+        // ✅ BUSCAR ASISTENCIAS DE HOY - MÉTODO MEJORADO
+        List<Asistencia> todasAsistencias = asistenciaRepo.findAll();
+        logger.info("Total de asistencias en BD: {}", todasAsistencias.size());
+        
+        // Filtrar manualmente por usuario y fecha
+        List<Asistencia> asistenciasHoy = todasAsistencias.stream()
+                .filter(a -> {
+                    boolean esDelUsuario = a.getUsuario().getId().equals(usuario.getId());
+                    boolean esFechaHoy = a.getFechaRegistro() != null && a.getFechaRegistro().equals(hoy);
+                    
+                    if (esDelUsuario) {
+                        logger.info("Asistencia encontrada - ID: {}, FechaRegistro: {}, Entrada: {}, Salida: {}", 
+                                   a.getId(), a.getFechaRegistro(), a.getEntrada(), a.getSalida());
+                    }
+                    
+                    return esDelUsuario && esFechaHoy;
+                })
+                .sorted((a1, a2) -> {
+                    // Ordenar por entrada (más reciente primero)
+                    if (a1.getEntrada() == null) return 1;
+                    if (a2.getEntrada() == null) return -1;
+                    return a2.getEntrada().compareTo(a1.getEntrada());
+                })
+                .collect(Collectors.toList());
+        
+        logger.info("Asistencias de hoy encontradas: {}", asistenciasHoy.size());
+        
+        // Tomar la más reciente
+        Asistencia ultima = asistenciasHoy.isEmpty() ? null : asistenciasHoy.get(0);
+        
+        if (ultima != null) {
+            logger.info("✅ Última asistencia - ID: {}, Entrada: {}, Salida: {}, Estado: {}", 
+                       ultima.getId(), ultima.getEntrada(), ultima.getSalida(), ultima.getEstado());
+        } else {
+            logger.info("⚠️ No se encontró asistencia de hoy");
+        }
 
         if ("CHECKIN".equalsIgnoreCase(accion)) {
             logger.info("📍 Procesando CHECK-IN...");
@@ -120,7 +112,7 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                     .build();
 
             Asistencia guardada = asistenciaRepo.save(nueva);
-            asistenciaRepo.flush(); // Forzar guardado
+            asistenciaRepo.flush();
             
             logger.info("✅ CHECK-IN guardado - ID: {}", guardada.getId());
             
@@ -134,6 +126,7 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                 logger.error("❌ VERIFICACIÓN: NO se encontró el registro en BD");
             }
 
+            // Verificar tardanza
             if (ahora.toLocalTime().isAfter(HORA_LIMITE_TARDANZA)) {
                 logger.info("⏰ Tardanza detectada");
                 Justificacion tardanza = Justificacion.builder()
@@ -156,16 +149,17 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                 logger.error("❌❌❌ NO SE ENCONTRÓ CHECK-IN DE HOY ❌❌❌");
                 logger.error("   Usuario ID: {}", usuario.getId());
                 logger.error("   Fecha buscada: {}", hoy);
+                logger.error("   Total asistencias del usuario en BD: {}", 
+                           todasAsistencias.stream()
+                               .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
+                               .count());
                 
-                // Mostrar TODOS los registros de asistencia
-                List<Asistencia> todas = asistenciaRepo.findAll();
-                logger.error("   Total registros ASISTENCIA: {}", todas.size());
-                
-                todas.stream()
+                // Mostrar TODAS las asistencias del usuario para debugging
+                todasAsistencias.stream()
                     .filter(a -> a.getUsuario().getId().equals(usuario.getId()))
                     .forEach(a -> {
-                        logger.error("   → ID: {}, FechaRegistro: {}, Entrada: {}, Salida: {}", 
-                                   a.getId(), a.getFechaRegistro(), a.getEntrada(), a.getSalida());
+                        logger.error("   → ID: {}, FechaRegistro: {}, Entrada: {}, Salida: {}, Estado: {}", 
+                                   a.getId(), a.getFechaRegistro(), a.getEntrada(), a.getSalida(), a.getEstado());
                     });
                 
                 throw new ValidatedRequestException("No tienes check-in abierto hoy");
@@ -176,15 +170,30 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
                 throw new ValidatedRequestException("Ya registraste tu salida hoy");
             }
 
-            logger.info("✅ Actualizando ID: {}", ultima.getId());
+            logger.info("✅ Actualizando registro ID: {}", ultima.getId());
+            logger.info("   Estado actual: {}", ultima.getEstado());
+            logger.info("   Entrada: {}", ultima.getEntrada());
+            logger.info("   Salida actual: {}", ultima.getSalida());
+            
+            // Actualizar la salida
             ultima.setSalida(ahora);
             ultima.setEstado("COMPLETADO");
             
             Asistencia actualizada = asistenciaRepo.save(ultima);
             asistenciaRepo.flush();
             
-            logger.info("✅ CHECK-OUT guardado - ID: {}, Salida: {}, Estado: {}", 
-                       actualizada.getId(), actualizada.getSalida(), actualizada.getEstado());
+            logger.info("✅ CHECK-OUT guardado exitosamente");
+            logger.info("   ID: {}", actualizada.getId());
+            logger.info("   Salida: {}", actualizada.getSalida());
+            logger.info("   Estado: {}", actualizada.getEstado());
+            
+            // Verificar que se actualizó correctamente
+            Asistencia verificacion = asistenciaRepo.findById(actualizada.getId()).orElse(null);
+            if (verificacion != null) {
+                logger.info("✅ VERIFICACIÓN: Salida registrada en BD: {}", verificacion.getSalida());
+            } else {
+                logger.error("❌ VERIFICACIÓN: NO se encontró el registro actualizado");
+            }
             
             return "Check-out registrado correctamente";
         }
